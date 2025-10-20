@@ -30,7 +30,7 @@ void DrawingCanvas::segmentDetection(){
     cout << "image height " << image.height() << endl;
 
     //To not crash we set initial size of the matrix
-    vector<CustomMatrix> windows(image.width()*image.height());
+    vector<vector<CustomMatrix>> windows(image.width(), vector<CustomMatrix>(image.height()));
 
     // Get the pixel value as an ARGB integer (QRgb is a typedef for unsigned int)
     for(int i = 1; i < image.width()-1;i++){
@@ -46,13 +46,30 @@ void DrawingCanvas::segmentDetection(){
 
             CustomMatrix mat(local_window);
 
-            windows.push_back(mat);
+            windows[i][j] = mat;
+
+            if (mat.DetectLine()){
+                // setting the box
+                QRect box(i,j,5,5);
+
+                QPainter painter(this);
+                painter.setRenderHint(QPainter::Antialiasing);
+
+                QPen outlinePen(Qt::magenta, 2);
+                painter.setPen(outlinePen);
+                painter.setBrush(Qt::NoBrush);
+
+                painter.drawRect(box);
+            }
         }
     }
+    isDetectSegmentClicked = true;
     return;
 }
 
 void DrawingCanvas::paintEvent(QPaintEvent *event){
+    QPixmap pixmap = this->grab(); //
+    QImage image = pixmap.toImage();
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -69,7 +86,7 @@ void DrawingCanvas::paintEvent(QPaintEvent *event){
     if(isPaintLinesClicked){
         cout << "paint lines block is called" << endl;
         pen.setColor(Qt::red);
-        pen.setWidth(4); // 4-pixel wide line
+        pen.setWidth(1); // 4-pixel wide line
         pen.setStyle(Qt::SolidLine);
         painter.setPen(pen);
 
@@ -86,6 +103,14 @@ void DrawingCanvas::paintEvent(QPaintEvent *event){
         pen.setColor(Qt::blue);
         painter.setPen(pen);
     }
+
+    // if(isDetectSegmentClicked){
+    //     for(int i = 1; i < image.width()-1;i++){
+    //         for(int j = 1; j < image.height()-1;j++){
+
+    //         }
+    //     }
+    // }
 }
 
 void DrawingCanvas::mousePressEvent(QMouseEvent *event) {
